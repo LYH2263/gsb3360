@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>提交评价 - 校园二手交易平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+    <nav class="app-nav">
+        <a th:href="@{/items}" href="/items" class="nav-link">商品列表</a>
+        <a th:href="@{/items/mine}" href="/items/mine" class="nav-link">我发布的</a>
+        <a th:href="@{/items/orders}" href="/items/orders" class="nav-link nav-link-active">我的订单</a>
+        <a th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users" class="nav-link">管理后台</a>
+        <span class="nav-user">
+            <span class="nav-username" th:text="${currentUsername}">user</span>
+            <span class="badge" th:if="${isAdmin}">ADMIN</span>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary btn-sm">退出</button>
+            </form>
+        </span>
+    </nav>
+</header>
+<main class="app-main">
+    <div class="app-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">提交评价</h1>
+                <p class="page-subtitle">
+                    为「<span th:text="${item.title}">商品</span>」打分并写下你的真实使用感受。
+                </p>
+            </div>
+            <a th:href="@{'/items/' + ${item.id}}" href="/items/1" class="btn btn-secondary btn-sm">返回详情</a>
+        </div>
+
+        <div class="card card-glass">
+            <form th:action="@{'/reviews/items/' + ${item.id}}"
+                  th:object="${reviewForm}"
+                  method="post"
+                  class="form">
+
+                <div th:if="${#fields.hasErrors('*')}" class="alert alert-error">
+                    <ul>
+                        <li th:each="err : ${#fields.errors('*')}" th:text="${err}">错误信息</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label>评分</label>
+                    <div>
+                        <label th:each="s : ${#numbers.sequence(1, 5)}" style="margin-right:16px;">
+                            <input type="radio" th:field="*{rating}" th:value="${s}"/>
+                            <span th:text="${s} + ' 星'">5 星</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">评价内容（10-200 字）</label>
+                    <textarea id="content" rows="5" th:field="*{content}"
+                              placeholder="请描述商品成色、卖家服务、交易体验等"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{'/items/' + ${item.id}}" href="/items/1" class="btn btn-secondary">取消</a>
+                    <button type="submit" class="btn btn-primary btn-glow">提交评价</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+</body>
+</html>

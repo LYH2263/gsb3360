@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.campustrade.review.ReviewMapper">
+
+    <resultMap id="ReviewResultMap" type="com.example.campustrade.review.Review">
+        <id property="id" column="id"/>
+        <result property="itemId" column="item_id"/>
+        <result property="buyerId" column="buyer_id"/>
+        <result property="rating" column="rating"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="buyerUsername" column="buyer_username"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        r.id, r.item_id, r.buyer_id, r.rating, r.content, r.created_at
+    </sql>
+
+    <insert id="insert" parameterType="com.example.campustrade.review.Review" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO reviews (item_id, buyer_id, rating, content, created_at)
+        VALUES (#{itemId}, #{buyerId}, #{rating}, #{content}, #{createdAt})
+    </insert>
+
+    <select id="findByItemId" resultMap="ReviewResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>,
+            u.username AS buyer_username
+        FROM reviews r
+        LEFT JOIN users u ON u.id = r.buyer_id
+        WHERE r.item_id = #{itemId}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <select id="findByItemAndBuyer" resultMap="ReviewResultMap">
+        SELECT
+            <include refid="Base_Column_List"/>,
+            u.username AS buyer_username
+        FROM reviews r
+        LEFT JOIN users u ON u.id = r.buyer_id
+        WHERE r.item_id = #{itemId} AND r.buyer_id = #{buyerId}
+        LIMIT 1
+    </select>
+
+    <select id="countByItemId" resultType="long">
+        SELECT COUNT(*) FROM reviews WHERE item_id = #{itemId}
+    </select>
+
+    <select id="averageRatingByItemId" resultType="java.lang.Double">
+        SELECT AVG(rating) FROM reviews WHERE item_id = #{itemId}
+    </select>
+
+</mapper>
