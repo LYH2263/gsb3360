@@ -26,6 +26,8 @@
 </header>
 <main class="app-main">
     <div class="app-container">
+        <div th:if="${success}" class="alert" style="background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 14px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px;" th:text="${success}">成功</div>
+        <div th:if="${error}" class="alert alert-error" style="margin-bottom: 12px;" th:text="${error}">错误</div>
         <div class="page-header">
             <div>
                 <h1 class="page-title">商品详情</h1>
@@ -81,6 +83,49 @@
                 <div class="detail-meta-item">
                     <span class="detail-label">成交时间</span>
                     <span class="detail-value" th:text="${item.tradedAt != null ? #temporals.format(item.tradedAt, 'yyyy-MM-dd HH:mm') : '未成交'}">未成交</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-glass review-card" th:if="${#strings.equalsIgnoreCase(item.status, 'SOLD')}">
+            <div class="rating-summary">
+                <div class="rating-avg-number" th:text="${averageRating != null ? #numbers.formatDecimal(averageRating, 1, 'POINT', 1, 'POINT') : '--'}">--</div>
+                <div>
+                    <div class="rating-avg-stars">
+                        <th:block th:with="full=${averageRating != null ? T(java.lang.Math).round(averageRating.doubleValue()) : 0}">
+                            <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                  th:class="${i <= full} ? 'star-filled' : 'star-empty'">★</span>
+                        </th:block>
+                    </div>
+                    <div class="rating-count" th:text="${reviewCount} + ' 条评价'">0 条评价</div>
+                </div>
+            </div>
+
+            <div class="review-action-bar" th:if="${canReview}">
+                <a th:href="@{/reviews/new(itemId=${item.id})}" class="btn btn-primary btn-sm">去评价</a>
+                <span class="muted">作为买家，你可以对该商品提交一次评价</span>
+            </div>
+            <div class="review-action-bar" th:if="${hasReviewed}">
+                <span class="badge" style="background-color: rgba(34,197,94,0.12); color: #15803d; border-color: rgba(34,197,94,0.4);">已评价</span>
+            </div>
+
+            <h3 class="review-section-title">买家评价</h3>
+            <div class="review-list">
+                <div class="review-empty" th:if="${#lists.isEmpty(reviews)}">暂无评价</div>
+                <div th:each="r : ${reviews}" class="review-item"
+                     th:classappend="${myReview != null and r.id == myReview.id} ? 'my-review'">
+                    <div class="review-item-header">
+                        <div class="review-buyer">
+                            <span th:text="${r.buyerUsername != null ? r.buyerUsername : '匿名用户'}">买家</span>
+                            <span class="review-my-badge" th:if="${myReview != null and r.id == myReview.id}">我的评价</span>
+                        </div>
+                        <div class="review-rating">
+                            <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                  th:class="${i <= r.rating} ? 'star-filled' : 'star-empty'">★</span>
+                        </div>
+                    </div>
+                    <div class="review-content" th:text="${r.content}">评价内容</div>
+                    <div class="review-time" th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 12:00</div>
                 </div>
             </div>
         </div>
