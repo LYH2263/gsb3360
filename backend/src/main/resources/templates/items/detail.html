@@ -88,6 +88,47 @@
         <div class="detail-back">
             <a th:href="@{/items}" href="/items" class="btn btn-secondary">返回列表</a>
         </div>
+
+        <div class="card card-glass" style="margin-top:24px;">
+            <div class="page-header" style="margin-bottom:16px;">
+                <div>
+                    <h2 class="page-title" style="font-size:1.4rem;">商品评价</h2>
+                    <p class="page-subtitle">
+                        <span th:if="${reviewAverage != null}">
+                            平均分
+                            <strong th:text="${#numbers.formatDecimal(reviewAverage, 1, 'POINT', 1, 'POINT')}">5.0</strong>
+                            / 5（共
+                            <span th:text="${reviewCount}">0</span>
+                            条评价）
+                        </span>
+                        <span th:unless="${reviewAverage != null}">暂无评价</span>
+                    </p>
+                </div>
+                <div th:if="${canReview}">
+                    <a th:href="@{'/reviews/items/' + ${item.id} + '/new'}" href="/reviews/items/1/new"
+                       class="btn btn-primary btn-sm">去评价</a>
+                </div>
+            </div>
+
+            <div>
+                <div th:if="${#lists.isEmpty(reviews)}" class="table-empty">还没有人评价该商品。</div>
+                <ul class="review-list" style="list-style:none; padding:0; margin:0;">
+                    <li th:each="r : ${reviews}"
+                        style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>
+                                <strong th:text="${r.buyerUsername != null ? r.buyerUsername : ('用户#' + r.buyerId)}">alice</strong>
+                                <span class="badge" style="margin-left:8px;"
+                                      th:text="${r.rating} + ' 星'">5 星</span>
+                            </span>
+                            <span class="detail-label"
+                                  th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 12:00</span>
+                        </div>
+                        <p style="margin:8px 0 0;" th:text="${r.content}">评价内容。</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </main>
 <footer class="app-footer">

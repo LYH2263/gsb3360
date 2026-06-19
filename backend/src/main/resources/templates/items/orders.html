@@ -41,11 +41,12 @@
                     <th>卖家</th>
                     <th>状态</th>
                     <th>成交时间</th>
+                    <th>评价</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(items)}">
-                    <td colspan="5" class="table-empty">你还没有购买记录。</td>
+                    <td colspan="6" class="table-empty">你还没有购买记录。</td>
                 </tr>
                 <tr th:each="item : ${items}">
                     <td>
@@ -58,6 +59,17 @@
                     <td th:text="${item.sellerId != null ? (item.sellerId + ' - ' + (userNameById[item.sellerId] != null ? userNameById[item.sellerId] : '未知用户')) : '-'}">2 - admin</td>
                     <td><span class="badge" th:text="${item.status}">SOLD</span></td>
                     <td th:text="${item.tradedAt != null ? #temporals.format(item.tradedAt, 'yyyy-MM-dd HH:mm') : '-'}">2026-01-01 12:00</td>
+                    <td>
+                        <a th:if="${orderCanReview != null and orderCanReview[item.id]}"
+                           th:href="@{'/reviews/items/' + ${item.id} + '/new'}"
+                           href="/reviews/items/1/new"
+                           class="btn btn-primary btn-sm">去评价</a>
+                        <span th:if="${(orderCanReview == null or !orderCanReview[item.id])
+                                       and orderHasReview != null and orderHasReview[item.id]}"
+                              class="badge">已评价</span>
+                        <span th:if="${(orderCanReview == null or !orderCanReview[item.id])
+                                       and (orderHasReview == null or !orderHasReview[item.id])}">-</span>
+                    </td>
                 </tr>
                 </tbody>
             </table>
