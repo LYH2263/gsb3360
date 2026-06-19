@@ -2,6 +2,8 @@ package com.example.campustrade.controller;
 
 import com.example.campustrade.entity.Item;
 import com.example.campustrade.entity.User;
+import com.example.campustrade.review.ReviewDTO;
+import com.example.campustrade.review.ReviewService;
 import com.example.campustrade.service.ItemService;
 import com.example.campustrade.service.UserService;
 import jakarta.validation.Valid;
@@ -19,7 +21,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -32,6 +37,7 @@ public class ItemController {
 
     private final ItemService itemService;
     private final UserService userService;
+    private final ReviewService reviewService;
 
     @ModelAttribute
     public void addCommonModel(Model model, Authentication authentication) {
@@ -134,6 +140,8 @@ public class ItemController {
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("totalItems", totalItems);
         model.addAttribute("userNameById", userNameById());
+        Set<Long> reviewedItemIds = reviewService.getReviewedItemIds(user.getId());
+        model.addAttribute("reviewedItemIds", reviewedItemIds);
         return "items/orders";
     }
 
@@ -145,6 +153,36 @@ public class ItemController {
             return "redirect:/items";
         }
         model.addAttribute("item", item);
+
+        List<ReviewDTO> reviews = reviewService.getReviewsByItemId(id);
+        BigDecimal avgRating = reviewService.getAverageRating(id);
+        long reviewCount = reviewService.getReviewCount(id);
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("averageRating", avgRating);
+        model.addAttribute("reviewCount", reviewCount);
+
+        boolean canReview = false;
+        boolean hasReviewed = false;
+        ReviewDTO myReview = null;
+        if (authentication != null) {
+            try {
+                User currentUser = currentUser(authentication);
+                boolean isSold = "SOLD".equalsIgnoreCase(item.getStatus());
+                boolean isBuyer = item.getBuyerId() != null && item.getBuyerId().equals(currentUser.getId());
+                boolean isNotSeller = item.getSellerId() == null || !item.getSellerId().equals(currentUser.getId());
+                boolean isNotAdmin = !isAdmin(currentUser);
+                myReview = reviewService.getMyReviewForItem(id, currentUser.getId());
+                hasReviewed = myReview != null;
+                canReview = isSold && isBuyer && isNotSeller && isNotAdmin && !hasReviewed;
+            } catch (Exception e) {
+                canReview = false;
+                hasReviewed = false;
+            }
+        }
+        model.addAttribute("canReview", canReview);
+        model.addAttribute("hasReviewed", hasReviewed);
+        model.addAttribute("myReview", myReview);
+
         return "items/detail";
     }
 

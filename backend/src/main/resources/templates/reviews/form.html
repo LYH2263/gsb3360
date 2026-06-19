@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>提交评价 - 校园二手交易平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+    <nav class="app-nav">
+        <a th:href="@{/items}" href="/items" class="nav-link">商品列表</a>
+        <a th:href="@{/items/mine}" href="/items/mine" class="nav-link">我发布的</a>
+        <a th:href="@{/items/orders}" href="/items/orders" class="nav-link">我的订单</a>
+        <a th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users" class="nav-link">管理后台</a>
+        <span class="nav-user">
+            <span class="nav-username" th:text="${currentUsername}">user</span>
+            <span class="badge" th:if="${isAdmin}">ADMIN</span>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary btn-sm">退出</button>
+            </form>
+        </span>
+    </nav>
+</header>
+<main class="app-main">
+    <div class="app-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">提交评价</h1>
+                <p class="page-subtitle">为你购买的商品留下真实评价。</p>
+            </div>
+        </div>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}">错误信息</div>
+
+        <div class="card card-glass">
+            <div class="review-item-info">
+                <h3 class="review-item-title" th:text="${item.title}">商品标题</h3>
+                <p class="review-item-price">
+                    <span th:text="${#numbers.formatDecimal(item.price, 1, 'POINT', 2, 'POINT')}">25.00</span>
+                    <span class="detail-price-unit">CNY</span>
+                </p>
+            </div>
+
+            <form th:action="@{/reviews}" method="post" th:object="${reviewForm}" class="form">
+                <input type="hidden" th:field="*{itemId}"/>
+
+                <div class="form-group" th:classappend="${#fields.hasErrors('rating')} ? 'has-error'">
+                    <label>评分</label>
+                    <div class="star-rating">
+                        <label class="star-option">
+                            <input type="radio" name="rating" value="1" th:field="*{rating}"/>
+                            <span class="star">★</span>
+                        </label>
+                        <label class="star-option">
+                            <input type="radio" name="rating" value="2" th:field="*{rating}"/>
+                            <span class="star">★</span>
+                        </label>
+                        <label class="star-option">
+                            <input type="radio" name="rating" value="3" th:field="*{rating}"/>
+                            <span class="star">★</span>
+                        </label>
+                        <label class="star-option">
+                            <input type="radio" name="rating" value="4" th:field="*{rating}"/>
+                            <span class="star">★</span>
+                        </label>
+                        <label class="star-option">
+                            <input type="radio" name="rating" value="5" th:field="*{rating}"/>
+                            <span class="star">★</span>
+                        </label>
+                        <span class="rating-text" id="ratingText">请选择评分</span>
+                    </div>
+                    <div th:if="${#fields.hasErrors('rating')}" class="alert alert-error form-error">
+                        <span th:errors="*{rating}">评分错误</span>
+                    </div>
+                </div>
+
+                <div class="form-group" th:classappend="${#fields.hasErrors('content')} ? 'has-error'">
+                    <label>评价内容 <span class="muted">(10-200字)</span></label>
+                    <textarea th:field="*{content}" rows="5" placeholder="请描述商品的实际状况、交易体验等，10-200字"
+                              id="reviewContent" maxlength="200"></textarea>
+                    <div class="form-help"><span id="charCount">0</span>/200</div>
+                    <div th:if="${#fields.hasErrors('content')}" class="alert alert-error form-error">
+                        <span th:errors="*{content}">内容错误</span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/items/{id}(id=${item.id})}" href="/items/1" class="btn btn-secondary">取消</a>
+                    <button type="submit" class="btn btn-primary">提交评价</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+<script>
+    (function() {
+        var options = document.querySelectorAll('.star-rating .star-option');
+        var allStars = document.querySelectorAll('.star-rating .star');
+        var ratingText = document.getElementById('ratingText');
+        var labels = ['', '很差', '较差', '一般', '满意', '非常满意'];
+        var currentRating = 0;
+
+        function setStars(n) {
+            allStars.forEach(function(s, i) {
+                if (i < n) {
+                    s.classList.add('star-filled');
+                } else {
+                    s.classList.remove('star-filled');
+                }
+            });
+            ratingText.textContent = n > 0 ? labels[n] : '请选择评分';
+        }
+
+        options.forEach(function(opt, idx) {
+            var input = opt.querySelector('input');
+            opt.addEventListener('mouseenter', function() {
+                setStars(idx + 1);
+            });
+            opt.addEventListener('click', function() {
+                currentRating = idx + 1;
+                input.checked = true;
+                setStars(currentRating);
+            });
+        });
+
+        var ratingContainer = document.querySelector('.star-rating');
+        ratingContainer.addEventListener('mouseleave', function() {
+            setStars(currentRating);
+        });
+
+        var checked = document.querySelector('.star-rating input:checked');
+        if (checked) {
+            currentRating = parseInt(checked.value);
+            setStars(currentRating);
+        }
+
+        var textarea = document.getElementById('reviewContent');
+        var charCount = document.getElementById('charCount');
+        function updateCount() {
+            charCount.textContent = textarea.value.length;
+        }
+        textarea.addEventListener('input', updateCount);
+        updateCount();
+    })();
+</script>
+</body>
+</html>

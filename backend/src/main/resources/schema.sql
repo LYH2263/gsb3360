@@ -1,6 +1,7 @@
 CREATE DATABASE IF NOT EXISTS campus_trade CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE campus_trade;
 
+DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS items;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS categories;
@@ -33,4 +34,18 @@ CREATE TABLE items (
     CONSTRAINT fk_items_seller FOREIGN KEY (seller_id) REFERENCES users(id),
     CONSTRAINT fk_items_buyer FOREIGN KEY (buyer_id) REFERENCES users(id),
     CONSTRAINT fk_items_category FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE reviews (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    item_id     BIGINT NOT NULL,
+    buyer_id    BIGINT NOT NULL,
+    rating      INT NOT NULL,
+    content     VARCHAR(500) NOT NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reviews_item FOREIGN KEY (item_id) REFERENCES items(id),
+    CONSTRAINT fk_reviews_buyer FOREIGN KEY (buyer_id) REFERENCES users(id),
+    CONSTRAINT uk_reviews_item_buyer UNIQUE (item_id, buyer_id),
+    CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5),
+    CONSTRAINT chk_reviews_content CHECK (CHAR_LENGTH(content) BETWEEN 10 AND 200)
 );
