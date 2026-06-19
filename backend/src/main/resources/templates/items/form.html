@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${item.id} == null ? '发布新商品' : '编辑商品'">商品表单</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+    <nav class="app-nav">
+        <a th:href="@{/items}" href="/items" class="nav-link">商品列表</a>
+        <a th:href="@{/items/mine}" href="/items/mine" class="nav-link">我发布的</a>
+        <a th:href="@{/items/orders}" href="/items/orders" class="nav-link">我的订单</a>
+        <a th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users" class="nav-link">管理后台</a>
+        <span class="nav-user">
+            <span class="nav-username" th:text="${currentUsername}">user</span>
+            <span class="badge" th:if="${isAdmin}">ADMIN</span>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary btn-sm">退出</button>
+            </form>
+        </span>
+    </nav>
+</header>
+<main class="app-main">
+    <div class="app-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" th:text="${item.id} == null ? '发布新商品' : '编辑商品'">商品表单</h1>
+                <p class="page-subtitle">填写物品信息，让它在校园中找到新的主人。</p>
+            </div>
+        </div>
+
+        <div class="card card-glass">
+            <form th:action="${item.id} == null ? @{/items} : @{'/items/' + ${item.id}}"
+                  th:object="${item}"
+                  method="post"
+                  class="form">
+                <input type="hidden" name="from" th:value="${from}"/>
+                <input type="hidden" name="page" th:value="${returnPage}"/>
+                <input type="hidden" name="size" th:value="${returnSize}"/>
+
+                <div th:if="${#fields.hasErrors('*')}" class="alert alert-error">
+                    <ul>
+                        <li th:each="err : ${#fields.errors('*')}" th:text="${err}">错误信息</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">标题</label>
+                    <input id="title" type="text" th:field="*{title}" placeholder="例如：九成新高数教材"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">描述</label>
+                    <textarea id="description" rows="4" th:field="*{description}"
+                              placeholder="简单介绍一下物品的成色、使用情况等"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="price">价格（元）</label>
+                    <input id="price" type="number" step="0.01" min="0.01" th:field="*{price}" placeholder="例如：25.00"/>
+                </div>
+
+                <div class="form-group inline">
+                    <div>
+                        <label>卖家</label>
+                        <input type="text" th:value="${currentUsername}" disabled/>
+                        <small class="form-help">卖家将自动绑定为当前登录用户。</small>
+                    </div>
+                    <div>
+                        <label for="status">状态</label>
+                        <select id="status" th:field="*{status}">
+                            <option value="" th:selected="${status == null}">自动设置为 ACTIVE</option>
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="SOLD">SOLD</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="${from == 'mine'} ? @{'/items/mine'(page=${returnPage},size=${returnSize})} : @{'/items'(page=${returnPage},size=${returnSize})}"
+                       href="/items"
+                       class="btn btn-secondary">返回列表</a>
+                    <button type="submit" class="btn btn-primary btn-glow">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+</body>
+</html>

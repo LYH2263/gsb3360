@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>用户管理 - 管理后台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade Admin</div>
+    <nav class="app-nav">
+        <a th:href="@{/items}" href="/items" class="nav-link">商品前台</a>
+        <a th:href="@{/admin/users}" href="/admin/users" class="nav-link nav-link-active">用户管理</a>
+        <a th:href="@{/admin/items}" href="/admin/items" class="nav-link">商品管理</a>
+        <span class="nav-user">
+            <span class="nav-username" th:text="${currentUsername}">admin</span>
+            <span class="badge">ADMIN</span>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary btn-sm">退出</button>
+            </form>
+        </span>
+    </nav>
+</header>
+<main class="app-main">
+    <div class="app-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">用户管理</h1>
+                <p class="page-subtitle">可删除普通用户账号（删除时会清理其发布商品）。</p>
+            </div>
+        </div>
+        <div class="card card-glass">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>手机号</th>
+                    <th>角色</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(users)}">
+                    <td colspan="6" class="table-empty">暂无用户</td>
+                </tr>
+                <tr th:each="u : ${users}">
+                    <td th:text="${u.id}">1</td>
+                    <td th:text="${u.username}">alice</td>
+                    <td th:text="${u.phone}">18800000000</td>
+                    <td>
+                        <span class="badge" th:text="${u.role}">USER</span>
+                    </td>
+                    <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 12:00</td>
+                    <td class="table-actions">
+                        <form th:if="${#strings.equalsIgnoreCase(u.role, 'USER')}"
+                              th:action="@{'/admin/users/' + ${u.id} + '/delete'}"
+                              method="post"
+                              class="inline-form"
+                              onsubmit="return confirm('确认删除该普通用户吗？其发布商品也会被删除。');">
+                            <button type="submit" class="btn btn-danger btn-sm">删除用户</button>
+                        </form>
+                        <span th:if="${!#strings.equalsIgnoreCase(u.role, 'USER')}" class="muted">不可删除</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${param.error}" class="alert alert-error" style="margin-top: 12px;">
+            操作失败：仅可删除普通用户。
+        </div>
+        <div class="pagination" th:if="${totalPages != null and totalPages > 1}">
+            <a class="page-link"
+               th:classappend="${page <= 1} ? ' page-link-disabled'"
+               th:href="${page > 1} ? @{'/admin/users'(page=${page-1},size=${size})} : '#'"
+               href="#">
+                上一页
+            </a>
+            <span class="page-numbers">
+                <a th:each="p : ${#numbers.sequence(1, totalPages)}"
+                   th:href="@{'/admin/users'(page=${p},size=${size})}"
+                   th:text="${p}"
+                   th:class="'page-link' + (${p} == ${page} ? ' page-link-active' : '')">1</a>
+            </span>
+            <a class="page-link"
+               th:classappend="${page >= totalPages} ? ' page-link-disabled'"
+               th:href="${page < totalPages} ? @{'/admin/users'(page=${page+1},size=${size})} : '#'"
+               href="#">
+                下一页
+            </a>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 管理后台</span>
+</footer>
+</body>
+</html>

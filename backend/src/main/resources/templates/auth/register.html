@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>注册 - 校园二手交易平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+</header>
+<main class="app-main">
+    <div class="app-container auth-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">注册新用户</h1>
+                <p class="page-subtitle">注册后默认成为普通用户，可发布和管理自己的商品。</p>
+            </div>
+        </div>
+
+        <div class="card card-glass">
+            <form th:action="@{/register}" th:object="${form}" method="post" class="form">
+
+                <div th:if="${#fields.hasErrors('*')}" class="alert alert-error">
+                    <ul>
+                        <li th:each="err : ${#fields.errors('*')}" th:text="${err}">错误信息</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input id="username" type="text" th:field="*{username}"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input id="password" type="password" th:field="*{password}"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">手机号（可选）</label>
+                    <input id="phone" type="text" th:field="*{phone}"/>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/login}" href="/login" class="btn btn-secondary">已有账号？去登录</a>
+                    <button type="submit" class="btn btn-primary btn-glow">注册</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+</body>
+</html>

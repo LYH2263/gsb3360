@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>我的订单 - 校园二手交易平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+    <nav class="app-nav">
+        <a th:href="@{/items}" href="/items" class="nav-link">商品列表</a>
+        <a th:href="@{/items/mine}" href="/items/mine" class="nav-link">我发布的</a>
+        <a th:href="@{/items/orders}" href="/items/orders" class="nav-link nav-link-active">我的订单</a>
+        <a th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users" class="nav-link">管理后台</a>
+        <span class="nav-user">
+            <span class="nav-username" th:text="${currentUsername}">user</span>
+            <span class="badge" th:if="${isAdmin}">ADMIN</span>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary btn-sm">退出</button>
+            </form>
+        </span>
+    </nav>
+</header>
+<main class="app-main">
+    <div class="app-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">我的订单</h1>
+                <p class="page-subtitle">这里展示你购买过的商品。</p>
+            </div>
+        </div>
+        <div class="card card-glass">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>成交价</th>
+                    <th>卖家</th>
+                    <th>状态</th>
+                    <th>成交时间</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(items)}">
+                    <td colspan="5" class="table-empty">你还没有购买记录。</td>
+                </tr>
+                <tr th:each="item : ${items}">
+                    <td>
+                        <a th:href="@{'/items/' + ${item.id}}" href="/items/1" class="item-title-link">
+                            <span class="item-title" th:text="${item.title}">商品标题</span>
+                        </a>
+                        <div class="item-desc" th:text="${item.description}">商品描述</div>
+                    </td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 1, 'POINT', 2, 'POINT')}">99.00</td>
+                    <td th:text="${item.sellerId != null ? (item.sellerId + ' - ' + (userNameById[item.sellerId] != null ? userNameById[item.sellerId] : '未知用户')) : '-'}">2 - admin</td>
+                    <td><span class="badge" th:text="${item.status}">SOLD</span></td>
+                    <td th:text="${item.tradedAt != null ? #temporals.format(item.tradedAt, 'yyyy-MM-dd HH:mm') : '-'}">2026-01-01 12:00</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" th:if="${totalPages != null and totalPages > 1}">
+            <a class="page-link"
+               th:classappend="${page <= 1} ? ' page-link-disabled'"
+               th:href="${page > 1} ? @{'/items/orders'(page=${page-1},size=${size})} : '#'"
+               href="#">
+                上一页
+            </a>
+            <span class="page-numbers">
+                <a th:each="p : ${#numbers.sequence(1, totalPages)}"
+                   th:href="@{'/items/orders'(page=${p},size=${size})}"
+                   th:text="${p}"
+                   th:class="'page-link' + (${p} == ${page} ? ' page-link-active' : '')">1</a>
+            </span>
+            <a class="page-link"
+               th:classappend="${page >= totalPages} ? ' page-link-disabled'"
+               th:href="${page < totalPages} ? @{'/items/orders'(page=${page+1},size=${size})} : '#'"
+               href="#">
+                下一页
+            </a>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+</body>
+</html>

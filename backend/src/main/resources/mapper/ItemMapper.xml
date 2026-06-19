@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.campustrade.mapper.ItemMapper">
+
+    <resultMap id="ItemResultMap" type="com.example.campustrade.entity.Item">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="price" column="price"/>
+        <result property="sellerId" column="seller_id"/>
+        <result property="buyerId" column="buyer_id"/>
+        <result property="status" column="status"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="tradedAt" column="traded_at"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, title, description, price, seller_id, buyer_id, status, category_id, created_at, traded_at
+    </sql>
+
+    <select id="findAll" resultMap="ItemResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM items
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findPage" parameterType="map" resultMap="ItemResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM items
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findActivePage" parameterType="map" resultMap="ItemResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM items
+        WHERE status = 'ACTIVE'
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findBySellerId" resultMap="ItemResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM items
+        WHERE seller_id = #{sellerId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findBySellerPage" resultMap="ItemResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM items
+        WHERE seller_id = #{sellerId}
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findByBuyerId" resultMap="ItemResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM items
+        WHERE buyer_id = #{buyerId}
+        ORDER BY traded_at DESC, created_at DESC
+    </select>
+
+    <select id="findByBuyerPage" resultMap="ItemResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM items
+        WHERE buyer_id = #{buyerId}
+        ORDER BY traded_at DESC, created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM items
+    </select>
+
+    <select id="countActive" resultType="long">
+        SELECT COUNT(*)
+        FROM items
+        WHERE status = 'ACTIVE'
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="ItemResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM items
+        WHERE id = #{id}
+    </select>
+
+    <select id="countBySellerId" resultType="long">
+        SELECT COUNT(*)
+        FROM items
+        WHERE seller_id = #{sellerId}
+    </select>
+
+    <select id="countByBuyerId" resultType="long">
+        SELECT COUNT(*)
+        FROM items
+        WHERE buyer_id = #{buyerId}
+    </select>
+
+    <insert id="insert" parameterType="com.example.campustrade.entity.Item" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO items (title, description, price, seller_id, buyer_id, status, category_id, created_at, traded_at)
+        VALUES (#{title}, #{description}, #{price}, #{sellerId}, #{buyerId}, #{status}, #{categoryId}, #{createdAt}, #{tradedAt})
+    </insert>
+
+    <update id="update" parameterType="com.example.campustrade.entity.Item">
+        UPDATE items
+        SET
+            title = #{title},
+            description = #{description},
+            price = #{price},
+            seller_id = #{sellerId},
+            buyer_id = #{buyerId},
+            status = #{status},
+            category_id = #{categoryId},
+            traded_at = #{tradedAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="markAsSold">
+        UPDATE items
+        SET
+            buyer_id = #{buyerId},
+            status = 'SOLD',
+            traded_at = #{tradedAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="clearBuyerByUserId">
+        UPDATE items
+        SET buyer_id = NULL
+        WHERE buyer_id = #{buyerId}
+    </update>
+
+    <delete id="deleteBySellerId">
+        DELETE FROM items WHERE seller_id = #{sellerId}
+    </delete>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM items WHERE id = #{id}
+    </delete>
+
+</mapper>

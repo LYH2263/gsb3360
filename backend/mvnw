@@ -1,0 +1,41 @@
+#!/bin/sh
+# Apache Maven Wrapper (minimal)
+set -e
+
+MVNW_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+WRAPPER_DIR="$MVNW_DIR/.mvn/wrapper"
+JAR="$WRAPPER_DIR/maven-wrapper.jar"
+PROPS="$WRAPPER_DIR/maven-wrapper.properties"
+
+if [ ! -f "$PROPS" ]; then
+  echo "Missing $PROPS" >&2
+  exit 1
+fi
+
+download() {
+  url="$1"
+  out="$2"
+  mkdir -p "$(dirname "$out")"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$url" -o "$out"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q "$url" -O "$out"
+  else
+    echo "Need curl or wget to download Maven Wrapper" >&2
+    exit 1
+  fi
+}
+
+if [ ! -f "$JAR" ]; then
+  WRAPPER_URL="$(grep '^wrapperUrl=' "$PROPS" | cut -d= -f2-)"
+  if [ -z "$WRAPPER_URL" ]; then
+    echo "wrapperUrl not found in $PROPS" >&2
+    exit 1
+  fi
+  echo "Downloading Maven Wrapper jar..." >&2
+  download "$WRAPPER_URL" "$JAR"
+fi
+
+JAVA_CMD="${JAVA_HOME:+$JAVA_HOME/bin/}java"
+exec "$JAVA_CMD" -jar "$JAR" -Dmaven.multiModuleProjectDirectory="$MVNW_DIR" "$@"
+

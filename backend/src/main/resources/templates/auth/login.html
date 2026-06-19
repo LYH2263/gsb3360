@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>登录 - 校园二手交易平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+</header>
+<main class="app-main">
+    <div class="app-container auth-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">欢迎登录</h1>
+                <p class="page-subtitle">使用账号登录后即可发布和管理校园二手商品。</p>
+            </div>
+        </div>
+
+        <div class="card card-glass">
+            <form method="post" action="/login" class="form">
+                <div th:if="${param.error}" class="alert alert-error">
+                    用户名或密码错误，请重试。
+                </div>
+                <div th:if="${param.registered}" class="alert">
+                    注册成功，请使用新账号登录。
+                </div>
+                <div th:if="${param.logout}" class="alert">
+                    已退出登录。
+                </div>
+
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input id="username" name="username" type="text"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input id="password" name="password" type="password"/>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/register}" href="/register" class="btn btn-secondary">注册新账号</a>
+                    <button type="submit" class="btn btn-primary btn-glow">登录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+</body>
+</html>

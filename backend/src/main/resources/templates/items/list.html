@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>商品列表 - 校园二手交易平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+    <nav class="app-nav">
+        <a th:href="@{/items}" href="/items" class="nav-link nav-link-active">商品列表</a>
+        <a th:href="@{/items/mine}" href="/items/mine" class="nav-link">我发布的</a>
+        <a th:href="@{/items/orders}" href="/items/orders" class="nav-link">我的订单</a>
+        <a th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users" class="nav-link">管理后台</a>
+        <span class="nav-user">
+            <span class="nav-username" th:text="${currentUsername}">user</span>
+            <span class="badge" th:if="${isAdmin}">ADMIN</span>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary btn-sm">退出</button>
+            </form>
+        </span>
+    </nav>
+</header>
+<main class="app-main">
+    <div class="app-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">校园二手集市</h1>
+                <p class="page-subtitle">在这里发现、发布和管理校园里的高性价比好物。</p>
+            </div>
+            <a th:if="${!isAdmin}" th:href="@{/items/new}" href="/items/new" class="btn btn-primary btn-glow">发布新商品</a>
+            <a th:if="${isAdmin}" th:href="@{/items(adminReadonly='1')}" href="/items?adminReadonly=1" class="btn btn-secondary">
+                发布新商品（管理员不可操作）
+            </a>
+        </div>
+
+        <div class="card card-glass">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>价格</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(items)}">
+                    <td colspan="5" class="table-empty">当前还没有商品，点击右上角「发布新商品」开启第一条交易信息吧～</td>
+                </tr>
+                <tr th:each="item : ${items}">
+                    <td>
+                        <a th:href="@{'/items/' + ${item.id}}" href="/items/1" class="item-title-link">
+                            <span class="item-title" th:text="${item.title}">高数教材九成新</span>
+                        </a>
+                        <div class="item-desc" th:text="${item.description}">大一高等数学教材，九成新，无划线。</div>
+                    </td>
+                    <td class="item-price">
+                        <span class="price-number" th:text="${#numbers.formatDecimal(item.price, 1, 'POINT', 2, 'POINT')}">25.00</span>
+                        <span class="price-unit">CNY</span>
+                    </td>
+                    <td>
+                        <span th:text="${#strings.isEmpty(item.status) ? 'ACTIVE' : item.status}" class="badge">ACTIVE</span>
+                    </td>
+                    <td th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 12:00</td>
+                    <td class="table-actions">
+                        <span th:if="${!isAdmin and currentUserId != null and item.sellerId != null and item.sellerId.equals(currentUserId)}">
+                            <a th:href="@{'/items/' + ${item.id} + '/edit'(from='list',page=${page},size=${size})}" href="/items/1/edit" class="btn btn-secondary btn-sm">
+                                编辑
+                            </a>
+                            <form th:action="@{'/items/' + ${item.id} + '/delete'}" method="post" class="inline-form"
+                                  onsubmit="return confirm('确认删除该商品吗？');">
+                                <input type="hidden" name="from" value="list"/>
+                                <input type="hidden" name="page" th:value="${page}"/>
+                                <input type="hidden" name="size" th:value="${size}"/>
+                                <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                            </form>
+                        </span>
+                        <form th:if="${!isAdmin and currentUserId != null and item.sellerId != null and !item.sellerId.equals(currentUserId) and #strings.equalsIgnoreCase(item.status, 'ACTIVE')}"
+                              th:action="@{'/items/' + ${item.id} + '/trade'}"
+                              method="post"
+                              class="inline-form"
+                              onsubmit="return confirm('确认购买该商品并完成交易吗？');">
+                            <button type="submit" class="btn btn-primary btn-sm">立即购买</button>
+                        </form>
+                        <span th:if="${!((!isAdmin and currentUserId != null and item.sellerId != null and item.sellerId.equals(currentUserId)) or (!isAdmin and currentUserId != null and item.sellerId != null and !item.sellerId.equals(currentUserId) and #strings.equalsIgnoreCase(item.status, 'ACTIVE')))}" class="muted">
+                            -
+                        </span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${param.forbidden}" class="alert alert-error" style="margin-top: 12px;">
+            你没有权限操作他人的商品。
+        </div>
+        <div th:if="${param.error}" class="alert alert-error" style="margin-top: 12px;">
+            操作失败，可能是商品状态已变更或参数无效。
+        </div>
+        <div th:if="${param.adminReadonly}" class="alert alert-error" style="margin-top: 12px;">
+            管理员账号仅可查看，不可发布、购买或修改商品。请切换普通用户账号操作。
+        </div>
+        <div class="pagination" th:if="${totalPages != null and totalPages > 1}">
+            <a class="page-link"
+               th:classappend="${page <= 1} ? ' page-link-disabled'"
+               th:href="${page > 1} ? @{'/items'(page=${page-1},size=${size})} : '#'"
+               href="#">
+                上一页
+            </a>
+            <span class="page-numbers">
+                <a th:each="p : ${#numbers.sequence(1, totalPages)}"
+                   th:href="@{'/items'(page=${p},size=${size})}"
+                   th:text="${p}"
+                   th:class="'page-link' + (${p} == ${page} ? ' page-link-active' : '')">1</a>
+            </span>
+            <a class="page-link"
+               th:classappend="${page >= totalPages} ? ' page-link-disabled'"
+               th:href="${page < totalPages} ? @{'/items'(page=${page+1},size=${size})} : '#'"
+               href="#">
+                下一页
+            </a>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${item.title} + ' - 商品详情'">商品详情</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+    <nav class="app-nav">
+        <a th:href="@{/items}" href="/items" class="nav-link">商品列表</a>
+        <a th:href="@{/items/mine}" href="/items/mine" class="nav-link">我发布的</a>
+        <a th:href="@{/items/orders}" href="/items/orders" class="nav-link">我的订单</a>
+        <a th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users" class="nav-link">管理后台</a>
+        <span class="nav-user">
+            <span class="nav-username" th:text="${currentUsername}">user</span>
+            <span class="badge" th:if="${isAdmin}">ADMIN</span>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary btn-sm">退出</button>
+            </form>
+        </span>
+    </nav>
+</header>
+<main class="app-main">
+    <div class="app-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">商品详情</h1>
+                <p class="page-subtitle">查看该物品的详细信息。</p>
+            </div>
+            <div class="detail-actions" th:if="${!isAdmin and currentUserId != null and item.sellerId != null and item.sellerId.equals(currentUserId)}">
+                <a th:href="@{'/items/' + ${item.id} + '/edit'}" href="/items/1/edit" class="btn btn-secondary btn-sm">
+                    编辑
+                </a>
+                <form th:action="@{'/items/' + ${item.id} + '/delete'}" method="post" class="inline-form"
+                      onsubmit="return confirm('确认删除该商品吗？');">
+                    <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                </form>
+            </div>
+            <form th:if="${!isAdmin and currentUserId != null and item.sellerId != null and !item.sellerId.equals(currentUserId) and #strings.equalsIgnoreCase(item.status, 'ACTIVE')}"
+                  th:action="@{'/items/' + ${item.id} + '/trade'}"
+                  method="post"
+                  class="detail-actions"
+                  onsubmit="return confirm('确认购买该商品并完成交易吗？');">
+                <button type="submit" class="btn btn-primary btn-sm">立即购买</button>
+            </form>
+        </div>
+
+        <div class="card card-glass detail-card">
+            <div class="detail-header">
+                <div>
+                    <h2 class="detail-title" th:text="${item.title}">高数教材九成新</h2>
+                    <p class="detail-subtitle" th:text="${item.description}">大一高等数学教材，九成新，无划线。</p>
+                </div>
+                <div class="detail-price-block">
+                    <div class="detail-price-number" th:text="${#numbers.formatDecimal(item.price, 1, 'POINT', 2, 'POINT')}">25.00</div>
+                    <div class="detail-price-unit">CNY</div>
+                </div>
+            </div>
+
+            <div class="detail-meta">
+                <div class="detail-meta-item">
+                    <span class="detail-label">状态</span>
+                    <span class="badge" th:text="${#strings.isEmpty(item.status) ? 'ACTIVE' : item.status}">ACTIVE</span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-label">卖家编号</span>
+                    <span class="detail-value" th:text="${item.sellerId != null ? item.sellerId : '未填写'}">1</span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-label">买家编号</span>
+                    <span class="detail-value" th:text="${item.buyerId != null ? item.buyerId : '未成交'}">-</span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-label">创建时间</span>
+                    <span class="detail-value" th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 12:00</span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-label">成交时间</span>
+                    <span class="detail-value" th:text="${item.tradedAt != null ? #temporals.format(item.tradedAt, 'yyyy-MM-dd HH:mm') : '未成交'}">未成交</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-back">
+            <a th:href="@{/items}" href="/items" class="btn btn-secondary">返回列表</a>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+</body>
+</html>
