@@ -47,6 +47,28 @@
                   onsubmit="return confirm('确认购买该商品并完成交易吗？');">
                 <button type="submit" class="btn btn-primary btn-sm">立即购买</button>
             </form>
+            <a th:if="${canReview}" th:href="@{'/reviews/new/' + ${item.id}}" href="/reviews/new/1" class="btn btn-primary btn-sm">去评价</a>
+        </div>
+
+        <div class="card card-glass detail-card" th:if="${#strings.equalsIgnoreCase(item.status, 'SOLD')}">
+            <div class="review-summary" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <div>
+                        <div style="font-size:13px; color:#64748b;">平均评分</div>
+                        <div style="display:flex; align-items:baseline; gap:8px;">
+                            <span style="font-size:28px; font-weight:700; color:#f59e0b;" th:text="${averageRating != null ? averageRating : '暂无'}">5.0</span>
+                            <span class="review-stars-display" style="font-size:18px; color:#f59e0b;" th:if="${averageRating != null}">
+                                <span th:each="i : ${#numbers.sequence(1,5)}" th:text="${i <= averageRatingRounded} ? '★' : '☆'">★</span>
+                            </span>
+                            <span th:unless="${averageRating != null}" style="color:#d1d5db; font-size:18px;">暂无评分</span>
+                        </div>
+                    </div>
+                    <div style="font-size:14px; color:#475569;">
+                        共 <span style="font-weight:600;" th:text="${reviewCount}">0</span> 条评价
+                    </div>
+                </div>
+                <a th:if="${canReview}" th:href="@{'/reviews/new/' + ${item.id}}" href="/reviews/new/1" class="btn btn-primary btn-sm">发表评价</a>
+            </div>
         </div>
 
         <div class="card card-glass detail-card">
@@ -81,6 +103,29 @@
                 <div class="detail-meta-item">
                     <span class="detail-label">成交时间</span>
                     <span class="detail-value" th:text="${item.tradedAt != null ? #temporals.format(item.tradedAt, 'yyyy-MM-dd HH:mm') : '未成交'}">未成交</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-glass" style="margin-top:16px;" th:if="${#strings.equalsIgnoreCase(item.status, 'SOLD')}">
+            <h3 style="margin:0 0 14px; font-size:18px;">用户评价</h3>
+            <div th:if="${#lists.isEmpty(reviews)}" style="text-align:center; color:#94a3b8; padding:24px 0; font-size:14px;">
+                暂无评价
+            </div>
+            <div th:unless="${#lists.isEmpty(reviews)}" style="display:flex; flex-direction:column; gap:14px;">
+                <div th:each="review : ${reviews}" style="padding:14px 16px; border-radius:14px; background:rgba(248,250,252,0.8); border:1px solid rgba(226,232,240,0.8);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-weight:600; font-size:14px;" th:text="${review.reviewerUsername != null ? review.reviewerUsername : '用户'}">user</span>
+                            <span style="color:#f59e0b; font-size:14px;">
+                                <th:block th:each="i : ${#numbers.sequence(1,5)}">
+                                    <span th:text="${i <= review.rating} ? '★' : '☆'">★</span>
+                                </th:block>
+                            </span>
+                        </div>
+                        <span style="font-size:12px; color:#94a3b8;" th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 12:00</span>
+                    </div>
+                    <div style="font-size:14px; color:#334155; line-height:1.6;" th:text="${review.content}">评价内容</div>
                 </div>
             </div>
         </div>

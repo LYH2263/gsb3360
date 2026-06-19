@@ -3,6 +3,7 @@ package com.example.campustrade.controller;
 import com.example.campustrade.entity.Item;
 import com.example.campustrade.entity.User;
 import com.example.campustrade.service.ItemService;
+import com.example.campustrade.service.ReviewService;
 import com.example.campustrade.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class ItemController {
 
     private final ItemService itemService;
     private final UserService userService;
+    private final ReviewService reviewService;
 
     @ModelAttribute
     public void addCommonModel(Model model, Authentication authentication) {
@@ -128,12 +130,18 @@ public class ItemController {
         long totalItems = itemService.countByBuyerId(user.getId());
         int totalPages = totalItems == 0 ? 0 : (int) ((totalItems + safeSize - 1) / safeSize);
         int safePage = totalPages == 0 ? 1 : Math.min(Math.max(page, 1), totalPages);
-        model.addAttribute("items", totalItems == 0 ? java.util.List.of() : itemService.listByBuyerPage(user.getId(), safePage, safeSize));
+        java.util.List<Item> orderItems = totalItems == 0 ? java.util.List.of() : itemService.listByBuyerPage(user.getId(), safePage, safeSize);
+        model.addAttribute("items", orderItems);
         model.addAttribute("page", safePage);
         model.addAttribute("size", safeSize);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("totalItems", totalItems);
         model.addAttribute("userNameById", userNameById());
+        java.util.Map<Long, Boolean> reviewedMap = new java.util.HashMap<>();
+        for (Item it : orderItems) {
+            reviewedMap.put(it.getId(), reviewService.hasReviewed(it.getId(), user.getId()));
+        }
+        model.addAttribute("reviewedMap", reviewedMap);
         return "items/orders";
     }
 
@@ -145,6 +153,24 @@ public class ItemController {
             return "redirect:/items";
         }
         model.addAttribute("item", item);
+        model.addAttribute("reviews", reviewService.listByItemId(id));
+        Double avg = reviewService.getAverageRating(id);
+        model.addAttribute("averageRating", avg == null ? null : String.format("%.1f", avg));
+        model.addAttribute("averageRatingRounded", avg == null ? 0 : (int) Math.round(avg));
+        model.addAttribute("reviewCount", reviewService.countByItemId(id));
+        if (authentication != null) {
+            User user = userService.findByUsername(authentication.getName());
+            if (user != null) {
+                boolean canReview = !"ADMIN".equalsIgnoreCase(user.getRole())
+                        && "SOLD".equalsIgnoreCase(item.getStatus())
+                        && item.getBuyerId() != null
+                        && item.getBuyerId().equals(user.getId())
+                        && item.getSellerId() != null
+                        && !item.getSellerId().equals(user.getId())
+                        && !reviewService.hasReviewed(id, user.getId());
+                model.addAttribute("canReview", canReview);
+            }
+        }
         return "items/detail";
     }
 
