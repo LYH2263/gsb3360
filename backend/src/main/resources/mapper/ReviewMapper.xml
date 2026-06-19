@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.campustrade.mapper.ReviewMapper">
+
+    <resultMap id="ReviewResultMap" type="com.example.campustrade.entity.Review">
+        <id property="id" column="id"/>
+        <result property="itemId" column="item_id"/>
+        <result property="reviewerId" column="reviewer_id"/>
+        <result property="rating" column="rating"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="reviewerUsername" column="reviewer_username"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        r.id, r.item_id, r.reviewer_id, r.rating, r.content, r.created_at, u.username AS reviewer_username
+    </sql>
+
+    <insert id="insert" parameterType="com.example.campustrade.entity.Review" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO reviews (item_id, reviewer_id, rating, content, created_at)
+        VALUES (#{itemId}, #{reviewerId}, #{rating}, #{content}, #{createdAt})
+    </insert>
+
+    <select id="findByItemAndReviewer" resultMap="ReviewResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM reviews r
+        LEFT JOIN users u ON u.id = r.reviewer_id
+        WHERE r.item_id = #{itemId} AND r.reviewer_id = #{reviewerId}
+    </select>
+
+    <select id="findByItemId" resultMap="ReviewResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM reviews r
+        LEFT JOIN users u ON u.id = r.reviewer_id
+        WHERE r.item_id = #{itemId}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <select id="findAverageRatingByItemId" resultType="java.lang.Double">
+        SELECT ROUND(AVG(rating), 1)
+        FROM reviews
+        WHERE item_id = #{itemId}
+    </select>
+
+    <select id="countByItemId" resultType="long">
+        SELECT COUNT(*) FROM reviews WHERE item_id = #{itemId}
+    </select>
+
+</mapper>

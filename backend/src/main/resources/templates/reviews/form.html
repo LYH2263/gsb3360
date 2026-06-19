@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>发表评价 - 校园二手交易平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="/css/styles.css"/>
+</head>
+<body class="app-body">
+<div class="grid-bg"></div>
+<header class="app-header">
+    <div class="app-logo">Campus Trade</div>
+    <nav class="app-nav">
+        <a th:href="@{/items}" href="/items" class="nav-link">商品列表</a>
+        <a th:href="@{/items/mine}" href="/items/mine" class="nav-link">我发布的</a>
+        <a th:href="@{/items/orders}" href="/items/orders" class="nav-link">我的订单</a>
+        <a th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users" class="nav-link">管理后台</a>
+        <span class="nav-user">
+            <span class="nav-username" th:text="${currentUsername}">user</span>
+            <span class="badge" th:if="${isAdmin}">ADMIN</span>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit" class="btn btn-secondary btn-sm">退出</button>
+            </form>
+        </span>
+    </nav>
+</header>
+<main class="app-main">
+    <div class="app-container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">发表评价</h1>
+                <p class="page-subtitle">对已购商品进行评分与评价。</p>
+            </div>
+        </div>
+
+        <div class="card card-glass">
+            <div style="margin-bottom:18px; padding:14px 18px; border-radius:14px; background:rgba(99,102,241,0.07); border:1px solid rgba(99,102,241,0.18);">
+                <div style="font-weight:600; font-size:16px;" th:text="${item.title}">商品标题</div>
+                <div style="font-size:13px; color:#64748b; margin-top:4px;" th:text="${item.description}">商品描述</div>
+                <div style="margin-top:8px; font-size:14px;">
+                    成交价：<span style="font-weight:700;" th:text="${#numbers.formatDecimal(item.price, 1, 'POINT', 2, 'POINT')}">0.00</span> CNY
+                </div>
+            </div>
+
+            <form th:action="@{'/reviews/' + ${item.id}}" th:object="${review}" method="post" class="form">
+                <div th:if="${#fields.hasAnyErrors()}" class="alert alert-error">
+                    <ul>
+                        <li th:each="err : ${#fields.allErrors()}" th:text="${err.defaultMessage}">错误信息</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label>评分</label>
+                    <div class="rating-stars" style="display:flex; gap:8px; font-size:28px; cursor:pointer;">
+                        <label th:each="i : ${#numbers.sequence(1,5)}" th:for="'rating' + ${i}" style="cursor:pointer;">
+                            <input type="radio" th:id="'rating' + ${i}" th:field="*{rating}" th:value="${i}" style="display:none;"/>
+                            <span class="star" th:text="${i <= *{rating} ? '★' : '☆'}" th:attrappend="data-value=${i}">★</span>
+                        </label>
+                    </div>
+                    <span class="form-help">请选择 1–5 星评分</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">评价内容</label>
+                    <textarea id="content" th:field="*{content}" placeholder="请输入 10–200 字的评价内容，分享您的购买体验..." maxlength="200" rows="5"></textarea>
+                    <span class="form-help">评价内容长度需在 10 到 200 字之间</span>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{'/items/' + ${item.id}}" href="/items/1" class="btn btn-secondary">取消</a>
+                    <button type="submit" class="btn btn-primary">提交评价</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<footer class="app-footer">
+    <span>© 2026 Campus Trade · 校园二手交易平台</span>
+</footer>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star');
+    const radios = document.querySelectorAll('input[type="radio"][name="rating"]');
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const val = parseInt(this.getAttribute('data-value'));
+            radios.forEach((r, idx) => {
+                const s = stars[idx];
+                if (idx + 1 <= val) {
+                    s.textContent = '★';
+                    s.style.color = '#f59e0b';
+                } else {
+                    s.textContent = '☆';
+                    s.style.color = '';
+                }
+            });
+        });
+        star.addEventListener('mouseenter', function() {
+            const val = parseInt(this.getAttribute('data-value'));
+            stars.forEach((s, idx) => {
+                if (idx + 1 <= val) {
+                    s.textContent = '★';
+                    s.style.color = '#f59e0b';
+                } else {
+                    s.textContent = '☆';
+                    s.style.color = '';
+                }
+            });
+        });
+    });
+    const container = document.querySelector('.rating-stars');
+    container.addEventListener('mouseleave', function() {
+        let selected = 0;
+        radios.forEach((r, idx) => {
+            if (r.checked) selected = idx + 1;
+        });
+        stars.forEach((s, idx) => {
+            if (idx + 1 <= selected) {
+                s.textContent = '★';
+                s.style.color = '#f59e0b';
+            } else {
+                s.textContent = '☆';
+                s.style.color = '';
+            }
+        });
+    });
+    const checkedRadio = document.querySelector('input[type="radio"][name="rating"]:checked');
+    if (checkedRadio) {
+        const val = parseInt(checkedRadio.value);
+        stars.forEach((s, idx) => {
+            if (idx + 1 <= val) {
+                s.textContent = '★';
+                s.style.color = '#f59e0b';
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>
