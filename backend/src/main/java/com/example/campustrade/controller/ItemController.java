@@ -3,6 +3,7 @@ package com.example.campustrade.controller;
 import com.example.campustrade.entity.Item;
 import com.example.campustrade.entity.User;
 import com.example.campustrade.service.ItemService;
+import com.example.campustrade.service.ReviewService;
 import com.example.campustrade.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -32,6 +36,7 @@ public class ItemController {
 
     private final ItemService itemService;
     private final UserService userService;
+    private final ReviewService reviewService;
 
     @ModelAttribute
     public void addCommonModel(Model model, Authentication authentication) {
@@ -128,12 +133,16 @@ public class ItemController {
         long totalItems = itemService.countByBuyerId(user.getId());
         int totalPages = totalItems == 0 ? 0 : (int) ((totalItems + safeSize - 1) / safeSize);
         int safePage = totalPages == 0 ? 1 : Math.min(Math.max(page, 1), totalPages);
-        model.addAttribute("items", totalItems == 0 ? java.util.List.of() : itemService.listByBuyerPage(user.getId(), safePage, safeSize));
+        List<Item> orderItems = totalItems == 0 ? java.util.List.of() : itemService.listByBuyerPage(user.getId(), safePage, safeSize);
+        model.addAttribute("items", orderItems);
         model.addAttribute("page", safePage);
         model.addAttribute("size", safeSize);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("totalItems", totalItems);
         model.addAttribute("userNameById", userNameById());
+
+        Set<Long> reviewedItemIds = new HashSet<>(reviewService.getReviewedItemIdsByBuyerId(user.getId()));
+        model.addAttribute("reviewedItemIds", reviewedItemIds);
         return "items/orders";
     }
 
@@ -145,6 +154,24 @@ public class ItemController {
             return "redirect:/items";
         }
         model.addAttribute("item", item);
+        model.addAttribute("reviews", reviewService.getReviewsByItemId(id));
+        model.addAttribute("averageRating", reviewService.getFormattedAverageRating(id));
+        model.addAttribute("roundedRating", reviewService.getRoundedAverageRating(id));
+        model.addAttribute("reviewCount", reviewService.getReviewCount(id));
+
+        boolean canReview = false;
+        boolean hasReviewed = false;
+        if (authentication != null) {
+            User user = userService.findByUsername(authentication.getName());
+            if (user != null && !"ADMIN".equalsIgnoreCase(user.getRole())) {
+                if ("SOLD".equalsIgnoreCase(item.getStatus()) && item.getBuyerId() != null && item.getBuyerId().equals(user.getId())) {
+                    canReview = true;
+                    hasReviewed = reviewService.hasUserReviewed(id, user.getId());
+                }
+            }
+        }
+        model.addAttribute("canReview", canReview);
+        model.addAttribute("hasReviewed", hasReviewed);
         return "items/detail";
     }
 

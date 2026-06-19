@@ -17,6 +17,13 @@ public class GlobalExceptionHandler {
             }
             return "redirect:/admin/users?forbidden";
         }
+        if (uri != null && uri.startsWith("/reviews")) {
+            String referer = request.getHeader("Referer");
+            if (referer != null && referer.contains("/items/")) {
+                return "redirect:" + referer.substring(referer.indexOf("/items/"));
+            }
+            return "redirect:/items?forbidden";
+        }
         return "redirect:/items?forbidden";
     }
 
@@ -29,6 +36,18 @@ public class GlobalExceptionHandler {
             }
             return "redirect:/admin/users?error";
         }
+        if (uri != null && uri.startsWith("/reviews")) {
+            String referer = request.getHeader("Referer");
+            if (referer != null && referer.contains("/items/")) {
+                return "redirect:" + referer.substring(referer.indexOf("/items/"));
+            }
+            return "redirect:/items?error";
+        }
         return "redirect:/items?error";
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public String handleIllegalState(HttpServletRequest request) {
+        return "redirect:/login";
     }
 }
