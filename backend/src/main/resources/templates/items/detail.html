@@ -85,6 +85,63 @@
             </div>
         </div>
 
+        <div class="card card-glass" th:if="${param.reviewed != null}">
+            <div class="alert alert-success">评价提交成功！感谢您的反馈。</div>
+        </div>
+
+        <div class="card card-glass" th:if="${param.error != null and param.error == 'forbidden'}">
+            <div class="alert alert-danger">您无权评价该商品。</div>
+        </div>
+
+        <div class="card card-glass" th:if="${param.error != null and param.error == 'notsold'}">
+            <div class="alert alert-danger">只能对已成交的商品进行评价。</div>
+        </div>
+
+        <div class="card card-glass" th:if="${param.error != null and param.error == 'alr'}">
+            <div class="alert alert-danger">您已经评价过该商品了。</div>
+        </div>
+
+        <div class="card card-glass" th:if="${reviewCount > 0 or canReview}">
+            <div class="review-summary">
+                <div class="rating-overview">
+                    <div class="rating-score">
+                        <span class="rating-number" th:text="${averageRating}">0.0</span>
+                        <span class="rating-total">/ 5.0</span>
+                    </div>
+                    <div class="rating-stars">
+                        <span th:each="i : ${#numbers.sequence(1, 5)}"
+                              th:class="${i <= roundedRating} ? 'star filled' : 'star empty'">★</span>
+                    </div>
+                    <div class="rating-count">
+                        <span th:text="${reviewCount}">0</span> 条评价
+                    </div>
+                </div>
+                <div class="review-action" th:if="${canReview and !hasReviewed}">
+                    <a th:href="@{'/reviews/new/' + ${item.id}}" class="btn btn-primary btn-sm">去评价</a>
+                </div>
+                <div class="review-action" th:if="${canReview and hasReviewed}">
+                    <span class="badge badge-success">已评价</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-glass" th:if="${reviewCount > 0}">
+            <h3 class="section-title">评价列表</h3>
+            <div class="review-list">
+                <div class="review-item" th:each="review : ${reviews}">
+                    <div class="review-header">
+                        <span class="review-username" th:text="${review.buyerUsername}">买家</span>
+                        <div class="review-rating">
+                            <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                  th:class="${i <= review.rating} ? 'star filled small' : 'star empty small'">★</span>
+                        </div>
+                        <span class="review-time" th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 12:00</span>
+                    </div>
+                    <div class="review-content" th:text="${review.content}">评价内容</div>
+                </div>
+            </div>
+        </div>
+
         <div class="detail-back">
             <a th:href="@{/items}" href="/items" class="btn btn-secondary">返回列表</a>
         </div>
